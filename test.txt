@@ -1,0 +1,27 @@
+separators = [
+    # Block-level (paragraphs, code blocks)
+    "\n\n",
+    "```",          # Code block in markdown
+    "---",          # Horizontal rule / section break
+
+    # Markdown / headings / HTML / LaTeX
+    "### ", "## ", "# ",
+    "<p>", "<div>", "<br>", "<li>", "<ul>", "<ol>", "<table>",
+    "\\section", "\\subsection", "\\begin", "\\end",
+
+    # Code keywords (Python, JS, etc.)
+    "def ", "class ", "import ", "from ", "function ", "return ",
+    "const ", "let ", "var ", "#", "//", "/*", "*/",
+
+    # Sentence/phrase-level
+    ". ", "! ", "? ", "; ", ": ", "—", " - ", ", ", "…",
+
+    # Structural / technical
+    "|", "\t", ",",  # Table elements / delimiters
+    "=", "+", "-", "*", "/", "%", "^", "&", "|", "~", "<", ">",  # Operators
+    "{", "}", "[", "]", "(", ")",
+
+    # Fallback
+    " ",     # Word-level
+    ""       # Final character-level fallback
+]
