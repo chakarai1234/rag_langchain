@@ -30,21 +30,21 @@ def main() -> None:
         initial_sidebar_state="expanded",
     )
 
-    st.title("Welcome to the RAG App")
+    st.sidebar.title("Welcome to the RAG App")
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    # List of options for the dropdown
-    options = ["llama3.2:1b", "llama3.2:3b", "deepseek-r1:1.5b", "gemma3:1b", "qwen2.5:1.5b", "qwen2.5:3b"]
-    # Create the dropdown
-    model_select = st.selectbox("Choose an option:", options)
+    # options = ["llama3.2:1b", "deepseek-r1:1.5b"]
+    options = ["deepseek-r1:14b", "mistral-nemo:latest", "llama3.1:8b"]
 
-    # Display the selected optionz
+    model_select = st.sidebar.selectbox("Choose an option:", options)
+
     st.write(f"You selected: {model_select}")
 
     embeddings = OllamaEmbeddings(model="nomic-embed-text")
-    model = OllamaLLM(model=model_select, max_new_tokens=128, temperature=0.0, streaming=True)
+
+    model = OllamaLLM(model=model_select, max_new_tokens=128, temperature=0.5, streaming=True, keep_alive="0")
     client = QdrantClient(url="http://localhost:6333")
 
     pdf = st.file_uploader("Upload a PDF file", type="pdf", label_visibility="collapsed")
@@ -60,7 +60,11 @@ def main() -> None:
 
     if pdf is not None:
         pdf_reader = PdfReader(pdf)
-        COLLECTION_NAME = "".join("".join("_".join(pdf_reader.metadata.title.split(" ")).split(":")).split(","))
+
+        if pdf_reader.metadata.title is not None:
+            COLLECTION_NAME = "".join("".join("_".join(pdf_reader.metadata.title.split(" ")).split(":")).split(","))
+        else:
+            COLLECTION_NAME = "rag_collection"
 
         raw_metadata = pdf_reader.metadata or {}
         metadata_dict = {k.strip("/").lower(): v for k, v in raw_metadata.items()}
@@ -79,8 +83,8 @@ def main() -> None:
                 text += page.extract_text() + "\n"
 
             splitter = RecursiveCharacterTextSplitter(
-                chunk_size=512,
-                chunk_overlap=50,
+                chunk_size=1024,
+                chunk_overlap=100,
                 separators=separators
             )
             docs = splitter.split_text(text)
