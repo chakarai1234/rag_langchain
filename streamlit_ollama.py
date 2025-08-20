@@ -13,16 +13,20 @@ separators = [
     "\n\n",
     "```",
     "---",
-    "####", "###", "##", "#",
-    ". ", "! ", "? ",
+    "####",
+    "###",
+    "##",
+    "#",
+    ". ",
+    "! ",
+    "? ",
     "\n",
     " ",
-    ""
+    "",
 ]
 
 
 def main() -> None:
-
     st.set_page_config(
         page_title="RAG App",
         page_icon=":guardsman:",
@@ -44,14 +48,25 @@ def main() -> None:
 
     embeddings = OllamaEmbeddings(model="nomic-embed-text")
 
-    model = OllamaLLM(model=model_select, max_new_tokens=128, temperature=0.5, streaming=True, keep_alive="0")
+    model = OllamaLLM(
+        model=model_select,
+        max_new_tokens=128,
+        temperature=0.5,
+        streaming=True,
+        keep_alive="0",
+        reasoning=False,
+    )
     client = QdrantClient(url="http://localhost:6333")
 
-    pdf = st.file_uploader("Upload a PDF file", type="pdf", label_visibility="collapsed")
+    pdf = st.file_uploader(
+        "Upload a PDF file", type="pdf", label_visibility="collapsed"
+    )
 
     st.write("#### Chat History")
     if st.session_state.chat_history:
-        for idx, (question, model_name, answer) in enumerate(st.session_state.chat_history, 1):
+        for idx, (question, model_name, answer) in enumerate(
+            st.session_state.chat_history, 1
+        ):
             with st.expander(f"Question {idx}: {question}"):
                 st.markdown(f"**Model:** {model_name}")
                 st.markdown(f"**Answer:** {answer}")
@@ -62,7 +77,11 @@ def main() -> None:
         pdf_reader = PdfReader(pdf)
 
         if pdf_reader.metadata.title is not None:
-            COLLECTION_NAME = "".join("".join("_".join(pdf_reader.metadata.title.split(" ")).split(":")).split(","))
+            COLLECTION_NAME = "".join(
+                "".join(
+                    "_".join(pdf_reader.metadata.title.split(" ")).split(":")
+                ).split(",")
+            )
         else:
             COLLECTION_NAME = "rag_collection"
 
@@ -83,13 +102,13 @@ def main() -> None:
                 text += page.extract_text() + "\n"
 
             splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1024,
-                chunk_overlap=100,
-                separators=separators
+                chunk_size=1024, chunk_overlap=100, separators=separators
             )
             docs = splitter.split_text(text)
 
-            documents = [Document(page_content=doc, metadata=metadata_dict) for doc in docs]
+            documents = [
+                Document(page_content=doc, metadata=metadata_dict) for doc in docs
+            ]
 
             vector_store = Qdrant.from_documents(
                 documents=documents,
@@ -104,7 +123,7 @@ def main() -> None:
         question = st.chat_input("Ask a question about the PDF file:")
         context = ""
         if question:
-            st.markdown("#### "+question)
+            st.markdown("#### " + question)
             relevant_docs = retriever.invoke(question)
 
             for doc in relevant_docs:
@@ -118,7 +137,7 @@ def main() -> None:
 
             prompt = prompt_template.format(context=context, question=question)
             response = model.stream(prompt)
-            st.write("#### "+model.model)
+            st.write("#### " + model.model)
 
             output_placeholder = st.empty()
 
@@ -135,14 +154,14 @@ def main() -> None:
     else:
         question = st.chat_input("Ask a question generally:")
         if question:
-            st.markdown("#### "+question)
+            st.markdown("#### " + question)
             prompt_template = ChatPromptTemplate.from_template(
                 "Answer the following question in the best possible way:\n\nQuestion:\n {question}"
             )
 
             prompt = prompt_template.format(question=question)
             response = model.stream(prompt)
-            st.write("#### "+model.model)
+            st.write("#### " + model.model)
 
             output_placeholder = st.empty()
 
